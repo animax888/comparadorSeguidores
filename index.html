@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Follower Analyzer</title>
+    <style>
+        body { font-family: sans-serif; background: #fafafa; padding: 20px; color: #262626; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 30 (20px); border: 1px solid #dbdbdb; border-radius: 8px; }
+        h1 { text-align: center; font-size: 24px; }
+        .upload-section { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+        .file-input { padding: 10px; border: 1px dashed #dbdbdb; border-radius: 4px; }
+        button { background: #0095f6; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #1877f2; }
+        #results { margin-top: 20px; white-space: pre-wrap; background: #f4f4f4; padding: 15px; border-radius: 8px; display: none; }
+        .counter { font-weight: bold; color: #ed4956; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Analizador de Seguidores</h1>
+    <p>Sube tus archivos descargados de Instagram:</p>
+    
+    <div class="upload-section">
+        <label>Archivo <b>following.html</b>:</label>
+        <input type="file" id="followingFile" class="file-input" accept=".html">
+        
+        <label>Archivo <b>followers_1.html</b>:</label>
+        <input type="file" id="followersFile" class="file-input" accept=".html">
+        
+        <button onclick="processFiles()">Comparar Usuarios</button>
+    </div>
+
+    <div id="results">
+        <div id="summary" class="counter"></div>
+        <div id="userList"></div>
+    </div>
+</div>
+
+<script>
+    async function readFile(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsText(file);
+        });
+    }
+
+    function extractUsers(html) {
+        const users = new Set();
+        const regex = /href="https:\/\/www\.instagram\.com\/(?:_u\/)?([a-zA-Z0-9._]+)"/g;
+        let match;
+        while ((match = regex.exec(html)) !== null) {
+            users.add(match[1]);
+        }
+        return users;
+    }
+
+    async function processFiles() {
+        const followingInput = document.getElementById('followingFile').files[0];
+        const followersInput = document.getElementById('followersFile').files[0];
+
+        if (!followingInput || !followersInput) {
+            alert("Por favor, selecciona ambos archivos.");
+            return;
+        }
+
+        const followingHtml = await readFile(followingInput);
+        const followersHtml = await readFile(followersInput);
+
+        const followingSet = extractUsers(followingHtml);
+        const followersSet = extractUsers(followersHtml);
+
+        const notFollowingBack = [...followingSet].filter(user => !followersSet.has(user)).sort();
+
+        // Mostrar resultados
+        const resultsDiv = document.getElementById('results');
+        const summaryDiv = document.getElementById('summary');
+        const userListDiv = document.getElementById('userList');
+
+        resultsDiv.style.display = 'block';
+        summaryDiv.innerText = `Total: ${notFollowingBack.length} personas no te siguen de vuelta.`;
+        userListDiv.innerText = notFollowingBack.map((u, i) => `${i + 1}. ${u}`).join('\n');
+    }
+</script>
+
+</body>
+</html>
