@@ -4,34 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instagram Auto-Analyzer</title>
-    <style>
-        :root {
-            --primary: #0095f6;
-            --bg: #fafafa;
-            --text: #262626;
-            --success: #34a853;
-        }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px; }
-        .card { background: white; border: 1px solid #dbdbdb; border-radius: 12px; width: 100%; max-width: 500px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
-        .upload-area { border: 2px dashed #dbdbdb; padding: 40px 20px; border-radius: 8px; cursor: pointer; transition: background 0.3s; margin-bottom: 20px; position: relative; }
-        .upload-area:hover { background: #f0f8ff; border-color: var(--primary); }
-        .upload-area p { margin: 0; color: #8e8e8e; font-weight: 500; }
-        input[type="file"] { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
-        .status { margin-top: 10px; font-size: 13px; color: #555; }
-        .btn-download { background: var(--success); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; display: none; margin: 20px auto 0; }
-        #results { margin-top: 25px; text-align: left; border-top: 1px solid #dbdbdb; padding-top: 15px; display: none; }
-        pre { background: #f8f9fa; padding: 15px; border-radius: 6px; max-height: 250px; overflow-y: auto; font-size: 13px; border: 1px solid #eee; }
-        .count { font-size: 24px; font-weight: bold; color: #ed4956; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="card">
-    <h1>Analizador Automático</h1>
-    <p style="font-size: 14px; color: #666; margin-bottom: 25px;">Selecciona ambos archivos HTML a la vez</p>
+    <h1>Analizador Automático de personas que no te siguen.</h1>
+    <p class="description">Selecciona ambos archivos HTML a la vez (following y followers)</p>
     
     <div class="upload-area" id="dropZone">
-        <p id="msg">Haz clic aquí o arrastra los archivos <br> (following y followers_1)</p>
+        <p id="msg">Haz clic aquí o arrastra los archivos</p>
         <input type="file" id="fileInput" multiple accept=".html">
     </div>
 
@@ -39,87 +21,15 @@
 
     <div id="results">
         <div class="count" id="summary"></div>
-        <p style="font-size: 14px; margin-bottom: 5px;">Personas que no te siguen:</p>
+        <p class="label-results">Personas que no te siguen de vuelta:</p>
         <pre id="userList"></pre>
-        <button id="downloadBtn" class="btn-download" onclick="downloadTxt()">Descargar Reporte .txt</button>
+        <button id="downloadBtn" class="btn-download" onclick="downloadTxt()">Descargar archivo .txt</button>
     </div>
+   <a href="otra_pagina.html" class="btn">Tutorial</a>
+
+
 </div>
 
-<script>
-    let globalNotFollowing = [];
-    const fileInput = document.getElementById('fileInput');
-    const status = document.getElementById('status');
-
-    fileInput.addEventListener('change', async (e) => {
-        const files = Array.from(e.target.files);
-        if (files.length < 2) {
-            alert("Por favor, selecciona al menos dos archivos (following y followers).");
-            return;
-        }
-
-        let followingHtml = "";
-        let followersHtml = "";
-
-        for (const file of files) {
-            const content = await readFile(file);
-            // Identificamos el archivo por su contenido o nombre
-            if (file.name.includes('following') || content.includes('_u/')) {
-                followingHtml = content;
-            } else if (file.name.includes('followers')) {
-                followersHtml = content;
-            }
-        }
-
-        if (followingHtml && followersHtml) {
-            status.innerText = "✅ Archivos identificados correctamente";
-            processData(followingHtml, followersHtml);
-        } else {
-            status.innerText = "❌ No se pudieron identificar los archivos. Asegúrate de subir 'following' y 'followers'.";
-        }
-    });
-
-    function readFile(file) {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result);
-            reader.readAsText(file);
-        });
-    }
-
-    function extractUsers(html) {
-        const users = new Set();
-        const regex = /href="https:\/\/www\.instagram\.com\/(?:_u\/)?([a-zA-Z0-9._]+)"/g;
-        let match;
-        while ((match = regex.exec(html)) !== null) {
-            users.add(match[1]);
-        }
-        return users;
-    }
-
-    function processData(htmlFollowing, htmlFollowers) {
-        const followingSet = extractUsers(htmlFollowing);
-        const followersSet = extractUsers(htmlFollowers);
-
-        globalNotFollowing = [...followingSet]
-            .filter(user => !followersSet.has(user))
-            .sort((a, b) => a.localeCompare(b));
-
-        document.getElementById('results').style.display = 'block';
-        document.getElementById('summary').innerText = globalNotFollowing.length;
-        document.getElementById('userList').innerText = globalNotFollowing.join('\n');
-        document.getElementById('downloadBtn').style.display = 'block';
-    }
-
-    function downloadTxt() {
-        const content = `LISTA DE NO SEGUIDORES\nTotal: ${globalNotFollowing.length}\n${'-'.repeat(20)}\n` + globalNotFollowing.join('\n');
-        const blob = new Blob([content], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `unfollowers.txt`;
-        a.click();
-    }
-</script>
-
+    <script src="script.js"></script>
 </body>
 </html>
